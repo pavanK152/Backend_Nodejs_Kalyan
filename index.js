@@ -31,5 +31,5 @@ app.listen(PORT, () => {
 });
 
 app.use("/", (req, res) => {
-  res.send("<h1> welcome to vendor");
+  res.send("<h1> welcome to vendor</h1>");
 });
