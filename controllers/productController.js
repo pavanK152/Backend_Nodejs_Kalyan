@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const multer = require("multer");
 const Firm = require("../models/Firm");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -20,11 +21,20 @@ const addProduct = async (req, res) => {
     const image = req.file ? req.file.filename : undefined;
 
     const firmId = req.params.firmId;
+
+    // 🔑 CRITICAL FIX
+    if (!firmId || !mongoose.Types.ObjectId.isValid(firmId)) {
+      return res.status(400).json({
+        message: "Firm not created yet. Please create a firm first.",
+      });
+    }
+
     const firm = await Firm.findById(firmId);
 
     if (!firm) {
-      return res.status(404).json({ error: "NO firm found" });
+      return res.status(404).json({ error: "No firm found" });
     }
+
     const product = new Product({
       productName,
       price,
@@ -34,32 +44,45 @@ const addProduct = async (req, res) => {
       image,
       firm: firm._id,
     });
+
     const savedProduct = await product.save();
 
-    firm.products.push(savedProduct);
-
+    // ✅ push ONLY product ID
+    firm.products.push(savedProduct._id);
     await firm.save();
 
-    res.status(200).json(savedProduct);
+    res.status(201).json(savedProduct);
   } catch (error) {
-    console.error(error);
+    console.error("addProduct error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 const getProductByFirm = async (req, res) => {
   try {
     const firmId = req.params.firmId;
+
+    // 🔑 CRITICAL FIX
+    if (!firmId || !mongoose.Types.ObjectId.isValid(firmId)) {
+      return res.status(200).json({
+        restaurantName: null,
+        products: [],
+        message: "Firm not created yet",
+      });
+    }
+
     const firm = await Firm.findById(firmId);
 
     if (!firm) {
       return res.status(404).json({ error: "No firm found" });
     }
+
     const restaurantName = firm.firmName;
     const products = await Product.find({ firm: firmId });
 
     res.status(200).json({ restaurantName, products });
   } catch (error) {
-    console.error(error);
+    console.error("getProductByFirm error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

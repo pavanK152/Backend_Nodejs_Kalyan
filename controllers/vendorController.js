@@ -8,13 +8,12 @@ dotEnv.config();
 const secretKey = process.env.JWT_SECRET;
 
 const vendorRegister = async (req, res) => {
-  console.log("REQ BODY:", req.body);
   const { username, email, password } = req.body;
 
   try {
     const vendorEmail = await Vendor.findOne({ email });
     if (vendorEmail) {
-      return res.status(400).json("Email already taken");
+      return res.status(400).json({ message: "Email already taken" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -29,7 +28,6 @@ const vendorRegister = async (req, res) => {
 
     res.status(201).json({ message: "Vendor registered successfully" });
   } catch (error) {
-    console.log("REGISTER ERROR:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
