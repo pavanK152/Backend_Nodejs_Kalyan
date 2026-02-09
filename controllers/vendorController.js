@@ -8,6 +8,7 @@ dotEnv.config();
 const secretKey = process.env.JWT_SECRET;
 
 const vendorRegister = async (req, res) => {
+  console.log("REQ BODY:", req.body);
   const { username, email, password } = req.body;
   try {
     const vendorEmail = await Vendor.findOne({ email });
