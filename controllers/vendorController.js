@@ -2,6 +2,7 @@ const Vendor = require("../models/Vendor");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const dotEnv = require("dotenv");
+const mongoose = require("mongoose");
 
 dotEnv.config();
 
@@ -63,24 +64,43 @@ const getAllVendors = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+const mongoose = require("mongoose");
+
 const getVendorById = async (req, res) => {
-  const vendorId = req.params.id;
   try {
+    const vendorId = req.params.id;
+
+    // 🔑 CRITICAL FIX
+    if (!vendorId || !mongoose.Types.ObjectId.isValid(vendorId)) {
+      return res.status(400).json({
+        message: "Invalid or missing vendorId",
+      });
+    }
+
     const vendor = await Vendor.findById(vendorId).populate("firm");
+
     if (!vendor) {
-      return res.status(404).json({ error: "Vendor not found" });
+      return res.status(404).json({ message: "Vendor not found" });
     }
 
     if (!vendor.firm || vendor.firm.length === 0) {
-      return res.status(200).json({ vendorId, vendorFirmId: null, vendor });
+      return res.status(200).json({
+        vendorId,
+        vendorFirmId: null,
+        vendor,
+      });
     }
 
     const vendorFirmId = vendor.firm[0]._id;
-    console.log(vendorFirmId);
-    return res.status(200).json({ vendorId, vendorFirmId, vendor });
+
+    return res.status(200).json({
+      vendorId,
+      vendorFirmId,
+      vendor,
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("getVendorById error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
