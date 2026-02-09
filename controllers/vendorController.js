@@ -64,7 +64,6 @@ const getAllVendors = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-const mongoose = require("mongoose");
 
 const getVendorById = async (req, res) => {
   try {
