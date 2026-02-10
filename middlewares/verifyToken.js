@@ -1,36 +1,34 @@
+const Vendor = require("../models/Vendor");
+const jwt = require("jsonwebtoken");
+const dotEnv = require("dotenv");
 
-const Vendor = require('../models/Vendor');
-const jwt = require('jsonwebtoken');
-const dotEnv = require('dotenv');
+dotEnv.config();
 
-dotEnv.config()
+const secretKey = process.env.JWT_SECRET; // ✅ SAME AS LOGIN
 
-const secretKey = process.env.WhatIsYourName
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization; // ✅ CORRECT HEADER
 
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Please login again" });
+  }
 
-const verifyToken = async(req, res, next) =>{
-    const token = req.headers.token;
+  const token = authHeader.split(" ")[1];
 
+  try {
+    const decoded = jwt.verify(token, secretKey);
 
-    if(!token){
-        return res.status(401).json({error: "Token is required"});
-
+    const vendor = await Vendor.findById(decoded.vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
     }
-    try {
-        const decoded = jwt.verify(token, secretKey)
-        const vendor = await Vendor.findById(decoded.vendorId);
 
-        if(!vendor){
-            return res.status(404).json({error: "vendor not found"})
-        }
-        req.vendorId = vendor._id
-        
-        next()
-    } catch (error) {
-        console.error(error)
-        return res.status(500).json({error: "Invalid token"});
-        
-    
-}
-}
-module.exports = verifyToken
+    req.vendorId = vendor._id;
+    next();
+  } catch (error) {
+    console.error("JWT error:", error);
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
+
+module.exports = verifyToken;
