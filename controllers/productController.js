@@ -47,7 +47,6 @@ const addProduct = async (req, res) => {
 
     const savedProduct = await product.save();
 
-    // ✅ push ONLY product ID
     firm.products.push(savedProduct._id);
     await firm.save();
 
