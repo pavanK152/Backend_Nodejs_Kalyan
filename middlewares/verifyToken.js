@@ -1,19 +1,15 @@
 const Vendor = require("../models/Vendor");
 const jwt = require("jsonwebtoken");
-const dotEnv = require("dotenv");
+require("dotenv").config();
 
-dotEnv.config();
-
-const secretKey = process.env.JWT_SECRET; // ✅ SAME AS LOGIN
+const secretKey = process.env.JWT_SECRET;
 
 const verifyToken = async (req, res, next) => {
-  const authHeader = req.headers.authorization; // ✅ CORRECT HEADER
+  const token = req.headers.token; // ✅ MATCH FRONTEND
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     return res.status(401).json({ message: "Please login again" });
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, secretKey);
@@ -26,7 +22,7 @@ const verifyToken = async (req, res, next) => {
     req.vendorId = vendor._id;
     next();
   } catch (error) {
-    console.error("JWT error:", error);
+    console.error("JWT error:", error.message);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
