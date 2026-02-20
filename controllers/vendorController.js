@@ -35,14 +35,18 @@ const vendorRegister = async (req, res) => {
 
     res.status(201).json({ message: "Vendor registered successfully" });
   } catch (error) {
+    console.error("REGISTER ERROR 👉", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 const vendorLogin = async (req, res) => {
   const { email, password } = req.body;
+  console.log("LOGIN BODY 👉", req.body);
+
   try {
     const vendor = await Vendor.findOne({ email });
+
     if (!vendor || !(await bcrypt.compare(password, vendor.password))) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -51,12 +55,10 @@ const vendorLogin = async (req, res) => {
       expiresIn: "1h",
     });
 
-    const vendorId = vendor._id;
-
-    res.status(200).json({ success: "Login Successful", token, vendorId });
-    console.log(email, "this is token", token);
+    res
+      .status(200)
+      .json({ success: "Login Successful", token, vendorId: vendor._id });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -75,7 +77,6 @@ const getVendorById = async (req, res) => {
   try {
     const vendorId = req.params.id;
 
-    // 🔑 CRITICAL FIX
     if (!vendorId || !mongoose.Types.ObjectId.isValid(vendorId)) {
       return res.status(400).json({
         message: "Invalid or missing vendorId",

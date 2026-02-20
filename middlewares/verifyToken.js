@@ -5,11 +5,13 @@ require("dotenv").config();
 const secretKey = process.env.JWT_SECRET;
 
 const verifyToken = async (req, res, next) => {
-  const token = req.headers.token; // ✅ MATCH FRONTEND
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Please login again" });
   }
+
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, secretKey);
